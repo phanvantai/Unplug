@@ -7,12 +7,14 @@
 
 import SwiftUI
 import SwiftData
+import FamilyControls
 
 @main
 struct UnplugApp: App {
+    @StateObject private var authorizationCenter = AuthorizationCenter.shared
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            AppLimit.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,8 +27,22 @@ struct UnplugApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            DashboardView()
+                .onAppear {
+                    requestFamilyControlsAuthorization()
+                }
         }
         .modelContainer(sharedModelContainer)
+    }
+    
+    private func requestFamilyControlsAuthorization() {
+        Task {
+            do {
+                try await authorizationCenter.requestAuthorization(for: .individual)
+                print("Family Controls authorization granted")
+            } catch {
+                print("Family Controls authorization failed: \(error)")
+            }
+        }
     }
 }
